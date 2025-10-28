@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<main class="admin-container">
+  <h1 class="admin-title">Admin Dashboard</h1>
+
+  <section class="admin-table-section">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Price (₵)</th>
+          <th>Category</th>
+          <th>Image</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in products %}
+        <tr>
+          <td>{{ item.id }}</td>
+          <td>{{ item.name }}</td>
+          <td>{{ item.price }}</td>
+          <td>{{ item.category }}</td>
+          <td><img src="{{ url_for('static', filename=item.image) }}" alt="{{ item.name }}" class="thumb"></td>
+          <td><a href="{{ url_for('delete_product', id=item.id) }}" class="delete-btn">Delete</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="admin-form-section">
+    <h2>Add New Product</h2>
+    <form action="{{ url_for('admin') }}" method="POST" enctype="multipart/form-data" class="admin-form">
+      <input type="text" name="name" placeholder="Product Name" required>
+      <input type="number" step="0.01" name="price" placeholder="Price" required>
+      <input type="file" name="image" accept="image/*" required>
+      <input type="text" name="category" placeholder="Category" required>
+      <button type="submit" class="submit-btn">Add Product</button>
+    </form>
+  </section>
+</main>
+{% endblock %}

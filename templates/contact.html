@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Contact | NiA Store{% endblock %}
+
+{% block content %}
+<main class="contact-section">
+  <div class="contact-card">
+    <h2>Contact <span>NiA</span></h2>
+    <p>Got a question, feedback, or partnership idea? Hit us up below 💬</p>
+
+    <form id="contactForm" class="contact-form">
+      <input type="text" placeholder="Your Name" required />
+      <input type="email" placeholder="Your Email" required />
+      <textarea placeholder="Your Message" rows="5" required></textarea>
+      <button type="submit" class="btn">Send Message</button>
+    </form>
+  </div>
+</main>
+
+<script>
+  const form = document.getElementById('contactForm');
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    alert('Message sent successfully 💌 (Flask will handle it soon!)');
+    form.reset();
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="NiA Store - Shop the Future. Stylish sneakers, tops, and trousers for the bold." />
+  <meta name="keywords" content="fashion, sneakers, shirts, trousers, nia store, online shop" />
+  <title>{% block title %}NiA Store{% endblock %}</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+
+  <!-- Font Awesome for Icons -->
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+  <div class="container">
+
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">NiA</div>
+      <nav class="navbar">
+        <ul>
+          <li><a href="{{ url_for('home') }}">Home</a></li>
+          <li><a href="{{ url_for('show_products') }}">Products</a></li>
+          <li><a href="{{ url_for('cart') }}">Cart</a></li>
+          <li><a href="{{ url_for('contact') }}">Contact</a></li>
+        </ul>
+      </nav>
+      <div class="menu-btn">
+        <span></span><span></span><span></span>
+      </div>
+    </header>
+
+    <!-- Main Page Content -->
+    {% block content %}{% endblock %}
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>© 2025 NiA Store. All rights reserved.</p>
+      <div class="socials">
+        <a href="#"><i class="fab fa-instagram"></i></a>
+        <a href="#"><i class="fab fa-twitter"></i></a>
+        <a href="#"><i class="fab fa-tiktok"></i></a>
+      </div>
+    </footer>
+
+  </div>
+
+  <script src="{{ url_for('static', filename='logic.js') }}"></script>
+</body>
+</html>

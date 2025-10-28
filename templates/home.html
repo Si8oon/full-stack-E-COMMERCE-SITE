@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}NiA Store{% endblock %}
+
+{% block content %}
+<main class="main">
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Shop the Future with <span>NiA</span></h1>
+      <p>Where style meets soul — find timeless pieces that speak your vibe.</p>
+      <div class="hero-btns">
+        <a href="{{ url_for('show_products') }}" class="btn shop-now">Shop Now</a>
+        <a href="#features" class="btn learn-more">Learn More</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="features">
+    <div class="feature">
+      <h3>⚡ Fast Delivery</h3>
+      <p>Get your favorites delivered in record time.</p>
+    </div>
+    <div class="feature">
+      <h3>💎 Premium Quality</h3>
+      <p>Every product is crafted with care and precision.</p>
+    </div>
+    <div class="feature">
+      <h3>🔒 Secure Payments</h3>
+      <p>We keep your shopping safe and stress-free.</p>
+    </div>
+  </section>
+
+</main>
+
+
+{% endblock %}

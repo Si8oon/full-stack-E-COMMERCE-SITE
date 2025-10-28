@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Products - NiA Store{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/products.css') }}">
+
+<main class="store">
+
+  <!-- Filter bar -->
+  <section class="filter-bar">
+    <input type="text" id="searchInput" placeholder="Search products..." />
+    <select id="categoryFilter">
+      <option value="all">All</option>
+      <option value="sneakers">Sneakers 👟</option>
+      <option value="shirts">Shirts 👕</option>
+      <option value="trousers">Trousers 👖</option>
+      <option value="shorts">Shorts 🩳</option>
+    </select>
+  </section>
+
+  <!-- Product grid -->
+  <section class="grid all-products">
+    {% for item in products %}
+      <div class="card" 
+           data-name="{{ item.name|lower }}" 
+           data-category="{{ item.category|lower }}">
+        <img src="{{ url_for('static', filename=item.image) }}" alt="{{ item.name }}">
+        <h3>{{ item.name }}</h3>
+        <p class="price">₵{{ item.price }}</p>
+        <p class="category-tag">{{ item.category }}</p>
+        <a href="{{ url_for('add_to_cart', product_id=item.id) }}" class="addBtn">Add to Cart</a>
+
+      </div>
+    {% endfor %}
+  </section>
+
+</main>
+
+<script>
+  const searchInput = document.getElementById("searchInput");
+  const categoryFilter = document.getElementById("categoryFilter");
+  const cards = document.querySelectorAll(".card");
+
+  function filterProducts() {
+    const search = searchInput.value.toLowerCase();
+    const category = categoryFilter.value;
+
+    cards.forEach(card => {
+      const name = card.dataset.name;
+      const cat = card.dataset.category;
+
+      const matchSearch = name.includes(search);
+      const matchCategory = (category === "all" || cat === category);
+
+      card.style.display = matchSearch && matchCategory ? "block" : "none";
+    });
+  }
+
+  searchInput.addEventListener("input", filterProducts);
+  categoryFilter.addEventListener("change", filterProducts);
+</script>
+{% endblock %}
