@@ -24,15 +24,21 @@ cursor = db.cursor(dictionary=True)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'abinbiresimon@gmail.com'   # change this
-app.config['MAIL_PASSWORD'] = 'si834on56'  # change to your app password
-
+app.config['MAIL_USERNAME'] = 'abinbiresimon@gmail.com'  # your gmail
+app.config['MAIL_PASSWORD'] = 'si834on56'  # your app password
 mail = Mail(app)
 
 # ===== HELPERS =====
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+def get_cart_total():
+    total = 0
+    if 'cart' in session:
+        for item in session['cart']:
+            total += float(item['price']) * item['quantity']
+    return round(total, 2)
 
 # ===== ROUTES =====
 @app.route("/")
@@ -50,43 +56,50 @@ def show_products():
 def add_to_cart(product_id):
     cursor.execute("SELECT * FROM products WHERE id = %s", (product_id,))
     product = cursor.fetchone()
-    
     if not product:
         flash("Product not found!", "error")
         return redirect(url_for("show_products"))
-    
-    cart = session.get("cart", [])
-    # check if item already in cart
+
+    cart = session.get('cart', [])
+    found = False
+
     for item in cart:
-        if item["id"] == product_id:
-            item["quantity"] += 1
+        if item['id'] == product['id']:
+            item['quantity'] += 1
+            found = True
             break
-    else:
-        product["quantity"] = 1
-        cart.append(product)
-    
-    session["cart"] = cart
+
+    if not found:
+        cart.append({
+            'id': product['id'],
+            'name': product['name'],
+            'price': float(product['price']),
+            'image': product['image'],
+            'quantity': 1
+        })
+
+    session['cart'] = cart
     flash(f"{product['name']} added to cart!", "success")
     return redirect(url_for("show_products"))
 
 @app.route("/cart")
 def cart():
-    cart = session.get("cart", [])
-    total = sum(float(item["price"]) * item["quantity"] for item in cart)
+    cart = session.get('cart', [])
+    total = get_cart_total()
     return render_template("cart.html", cart=cart, total=total)
 
 @app.route("/remove_from_cart/<int:product_id>")
 def remove_from_cart(product_id):
-    cart = session.get("cart", [])
-    cart = [item for item in cart if item["id"] != product_id]
-    session["cart"] = cart
-    flash("Item removed from cart!", "info")
+    cart = session.get('cart', [])
+    new_cart = [item for item in cart if item['id'] != product_id]
+    session['cart'] = new_cart
+    flash("Item removed from cart.", "info")
     return redirect(url_for("cart"))
 
 @app.route("/clear_cart")
 def clear_cart():
-    session.pop("cart", None)
-    flash("Cart cleared!", "info")
+    session.pop('cart', None)
+    flash("Cart cleared.", "info")
     return redirect(url_for("cart"))
 
 # ===== CONTACT PAGE =====
@@ -98,12 +111,14 @@ def contact():
         subject = request.form["subject"]
         message = request.form["message"]
 
+        # store in DB
         cursor.execute(
             "INSERT INTO messages (name, email, subject, message) VALUES (%s, %s, %s, %s)",
             (name, email, subject, message)
         )
         db.commit()
 
+        # optional email
         try:
             msg = Message(
                 subject=f"New Contact Message: {subject}",

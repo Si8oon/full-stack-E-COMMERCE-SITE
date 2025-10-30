@@ -1,27 +1,38 @@
 {% extends "base.html" %}
 {% block title %}Your Cart - NiA Store{% endblock %}
+
 {% block content %}
 <main class="cart-page">
   <section class="cart-section">
-    <h2>Your Cart</h2>
+    <h2 class="cart-title">🛒 Your Cart</h2>
+
     {% if cart %}
-      <ul>
+      <ul class="cart-list">
         {% for item in cart %}
-          <li>
-            <img src="{{ url_for('static', filename=item.image) }}" width="80">
-            <strong>{{ item.name }}</strong> — ₵{{ item.price }} × {{ item.quantity }}
-            <a href="{{ url_for('remove_from_cart', product_id=item.id) }}">Remove</a>
+          <li class="cart-item">
+            <div class="item-info">
+              <img src="{{ url_for('static', filename=item.image) }}" alt="{{ item.name }}" class="cart-img">
+              <div class="item-text">
+                <strong>{{ item.name }}</strong>
+                <p>₵{{ item.price }} × {{ item.quantity }}</p>
+              </div>
+            </div>
+            <a href="{{ url_for('remove_from_cart', product_id=item.id) }}" class="removeBtn">Remove</a>
           </li>
         {% endfor %}
       </ul>
-      <h3>Total: ₵{{ total }}</h3>
+
+      <div class="cart-total">
+        <h3>Total: <span>₵{{ total }}</span></h3>
+      </div>
 
       <div class="cart-actions">
-        <a href="{{ url_for('clear_cart') }}" class="btn">Clear Cart</a>
-        <a href="{{ url_for('show_products') }}" class="btn">Continue Shopping</a>
+        <a href="{{ url_for('clear_cart') }}" class="btn clear-btn">Clear Cart</a>
+        <a href="{{ url_for('show_products') }}" class="btn continue-btn">Continue Shopping</a>
       </div>
+
     {% else %}
-      <p>Your cart is empty 😅</p>
+      <p class="empty-cart">Your cart is empty 😅</p>
     {% endif %}
   </section>
 </main>
