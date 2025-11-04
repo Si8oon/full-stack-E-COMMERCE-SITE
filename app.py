@@ -5,27 +5,29 @@ from werkzeug.utils import secure_filename
 from flask_mail import Mail, Message
 
 app = Flask(__name__)
-app.secret_key = "nia_secret_key"
+app.secret_key = os.getenv("SECRET_KEY", "nia_secret_key")
 
 # ===== CONFIG =====
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'images')
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
-# ===== DATABASE CONNECTION =====
+# ===== DATABASE CONFIG =====
+
 db = mysql.connector.connect(
     host="localhost",
-    user="nia_user",
-    password="Nia@1234!",
-    database="nia_store"
+    user="flaskuser",
+    password="Flask@123!",
+    database="ecommerce"
 )
+
 cursor = db.cursor(dictionary=True)
 
 # ===== EMAIL CONFIG =====
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'abinbiresimon@gmail.com'  # your gmail
-app.config['MAIL_PASSWORD'] = 'si834on56'  # your app password
+app.config['MAIL_USERNAME'] = os.getenv("MAIL_USERNAME")
+app.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD")
 mail = Mail(app)
 
 # ===== HELPERS =====
@@ -118,12 +120,12 @@ def contact():
         )
         db.commit()
 
-        # optional email
+        # send email
         try:
             msg = Message(
                 subject=f"New Contact Message: {subject}",
                 sender=app.config['MAIL_USERNAME'],
-                recipients=['your_email@gmail.com'],
+                recipients=[os.getenv("ADMIN_EMAIL", "your_email@gmail.com")],
                 body=f"From: {name} <{email}>\n\n{message}"
             )
             mail.send(msg)
@@ -169,4 +171,4 @@ def delete_product(id):
 
 # ===== RUN APP =====
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", debug=True)
