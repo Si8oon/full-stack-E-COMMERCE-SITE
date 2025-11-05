@@ -13,11 +13,12 @@ app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
 # ===== DATABASE CONFIG =====
 
+# ===== DATABASE CONFIG =====
 db = mysql.connector.connect(
     host="localhost",
     user="flaskuser",
     password="Flask@123!",
-    database="ecommerce"
+    database="nia_store"  # ← Change from 'ecommerce' to 'nia_store'
 )
 
 cursor = db.cursor(dictionary=True)
