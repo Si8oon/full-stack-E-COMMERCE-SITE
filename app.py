@@ -12,15 +12,13 @@ app.config['UPLOAD_FOLDER'] = os.path.join('static', 'images')
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
 # ===== DATABASE CONFIG =====
-
-# ===== DATABASE CONFIG =====
 db = mysql.connector.connect(
-    host="localhost",
-    user="flaskuser",
-    password="Flask@123!",
-    database="nia_store"  # ← Change from 'ecommerce' to 'nia_store'
+    host=os.getenv("MYSQLHOST", "localhost"),
+    user=os.getenv("MYSQLUSER", "flaskuser"),
+    password=os.getenv("MYSQLPASSWORD", "Flask@123!"),
+    database=os.getenv("MYSQLDATABASE", "nia_store"),
+    port=os.getenv("MYSQLPORT", 3306)
 )
-
 cursor = db.cursor(dictionary=True)
 
 # ===== EMAIL CONFIG =====
@@ -114,14 +112,12 @@ def contact():
         subject = request.form["subject"]
         message = request.form["message"]
 
-        # store in DB
         cursor.execute(
             "INSERT INTO messages (name, email, subject, message) VALUES (%s, %s, %s, %s)",
             (name, email, subject, message)
         )
         db.commit()
 
-        # send email
         try:
             msg = Message(
                 subject=f"New Contact Message: {subject}",
@@ -172,4 +168,5 @@ def delete_product(id):
 
 # ===== RUN APP =====
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    port = int(os.environ.get("PORT", 8000))
+    app.run(host="0.0.0.0", port=port, debug=False)
