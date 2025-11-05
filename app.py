@@ -17,7 +17,9 @@ db = mysql.connector.connect(
     user=os.getenv("MYSQLUSER", "flaskuser"),
     password=os.getenv("MYSQLPASSWORD", "Flask@123!"),
     database=os.getenv("MYSQLDATABASE", "nia_store"),
-    port=os.getenv("MYSQLPORT", 3306)
+    port=int(os.getenv("MYSQLPORT", 3306))
+
+    
 )
 cursor = db.cursor(dictionary=True)
 
