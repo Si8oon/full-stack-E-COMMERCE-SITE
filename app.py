@@ -13,13 +13,11 @@ app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
 # ===== DATABASE CONFIG =====
 db = mysql.connector.connect(
-    host=os.getenv("MYSQLHOST", "localhost"),
-    user=os.getenv("MYSQLUSER", "flaskuser"),
-    password=os.getenv("MYSQLPASSWORD", "Flask@123!"),
-    database=os.getenv("MYSQLDATABASE", "nia_store"),
-    port=int(os.getenv("MYSQLPORT", 3306))
-
-    
+    host=os.getenv("MYSQLHOST"),
+    user=os.getenv("MYSQLUSER"),
+    password=os.getenv("MYSQLPASSWORD"),
+    database=os.getenv("MYSQLDATABASE"),
+    port=os.getenv("MYSQLPORT")
 )
 cursor = db.cursor(dictionary=True)
 
