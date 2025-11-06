@@ -1,6 +1,6 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-import mysql.connector
+import psycopg2
 from werkzeug.utils import secure_filename
 from flask_mail import Mail, Message
 
@@ -12,14 +12,25 @@ app.config['UPLOAD_FOLDER'] = os.path.join('static', 'images')
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
 # ===== DATABASE CONFIG =====
-db = mysql.connector.connect(
-    host=os.getenv("MYSQLHOST"),
-    user=os.getenv("MYSQLUSER"),
-    password=os.getenv("MYSQLPASSWORD"),
-    database=os.getenv("MYSQLDATABASE"),
-    port=os.getenv("MYSQLPORT")
-)
-cursor = db.cursor(dictionary=True)
+def get_db_connection():
+    """Get PostgreSQL database connection"""
+    try:
+        # Render provides DATABASE_URL environment variable
+        database_url = os.getenv('DATABASE_URL')
+        
+        if database_url:
+            # For production (Render)
+            conn = psycopg2.connect(database_url, sslmode='require')
+        else:
+            # For local development (SQLite as fallback)
+            import sqlite3
+            conn = sqlite3.connect('local.db')
+            conn.row_factory = sqlite3.Row
+            
+        return conn
+    except Exception as e:
+        print(f"Database connection error: {e}")
+        return None
 
 # ===== EMAIL CONFIG =====
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -48,40 +59,76 @@ def home():
 
 @app.route("/products")
 def show_products():
-    cursor.execute("SELECT * FROM products")
-    products = cursor.fetchall()
-    return render_template("products.html", products=products)
+    conn = get_db_connection()
+    if not conn:
+        flash("Database connection failed", "error")
+        return render_template("products.html", products=[])
+    
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM products")
+        products = cursor.fetchall()
+        
+        # Convert to list of dictionaries for PostgreSQL
+        columns = [desc[0] for desc in cursor.description]
+        products_list = []
+        for row in products:
+            products_list.append(dict(zip(columns, row)))
+            
+        return render_template("products.html", products=products_list)
+    except Exception as e:
+        flash(f"Error loading products: {e}", "error")
+        return render_template("products.html", products=[])
+    finally:
+        conn.close()
 
 # ===== CART SYSTEM =====
 @app.route("/add_to_cart/<int:product_id>")
 def add_to_cart(product_id):
-    cursor.execute("SELECT * FROM products WHERE id = %s", (product_id,))
-    product = cursor.fetchone()
-    if not product:
-        flash("Product not found!", "error")
+    conn = get_db_connection()
+    if not conn:
+        flash("Database connection failed", "error")
         return redirect(url_for("show_products"))
+    
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM products WHERE id = %s", (product_id,))
+        product_row = cursor.fetchone()
+        
+        if not product_row:
+            flash("Product not found!", "error")
+            return redirect(url_for("show_products"))
+        
+        # Convert to dictionary
+        columns = [desc[0] for desc in cursor.description]
+        product = dict(zip(columns, product_row))
 
-    cart = session.get('cart', [])
-    found = False
+        cart = session.get('cart', [])
+        found = False
 
-    for item in cart:
-        if item['id'] == product['id']:
-            item['quantity'] += 1
-            found = True
-            break
+        for item in cart:
+            if item['id'] == product['id']:
+                item['quantity'] += 1
+                found = True
+                break
 
-    if not found:
-        cart.append({
-            'id': product['id'],
-            'name': product['name'],
-            'price': float(product['price']),
-            'image': product['image'],
-            'quantity': 1
-        })
+        if not found:
+            cart.append({
+                'id': product['id'],
+                'name': product['name'],
+                'price': float(product['price']),
+                'image': product['image'],
+                'quantity': 1
+            })
 
-    session['cart'] = cart
-    flash(f"{product['name']} added to cart!", "success")
-    return redirect(url_for("show_products"))
+        session['cart'] = cart
+        flash(f"{product['name']} added to cart!", "success")
+        return redirect(url_for("show_products"))
+    except Exception as e:
+        flash(f"Error adding to cart: {e}", "error")
+        return redirect(url_for("show_products"))
+    finally:
+        conn.close()
 
 @app.route("/cart")
 def cart():
@@ -112,11 +159,19 @@ def contact():
         subject = request.form["subject"]
         message = request.form["message"]
 
-        cursor.execute(
-            "INSERT INTO messages (name, email, subject, message) VALUES (%s, %s, %s, %s)",
-            (name, email, subject, message)
-        )
-        db.commit()
+        conn = get_db_connection()
+        if conn:
+            try:
+                cursor = conn.cursor()
+                cursor.execute(
+                    "INSERT INTO messages (name, email, subject, message) VALUES (%s, %s, %s, %s)",
+                    (name, email, subject, message)
+                )
+                conn.commit()
+            except Exception as e:
+                print(f"Database error: {e}")
+            finally:
+                conn.close()
 
         try:
             msg = Message(
@@ -148,22 +203,53 @@ def admin():
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             image_path = f"images/{filename}"
 
-            cursor.execute(
-                "INSERT INTO products (name, price, image, category) VALUES (%s, %s, %s, %s)",
-                (name, price, image_path, category)
-            )
-            db.commit()
+            conn = get_db_connection()
+            if conn:
+                try:
+                    cursor = conn.cursor()
+                    cursor.execute(
+                        "INSERT INTO products (name, price, image, category) VALUES (%s, %s, %s, %s)",
+                        (name, price, image_path, category)
+                    )
+                    conn.commit()
+                except Exception as e:
+                    print(f"Database error: {e}")
+                finally:
+                    conn.close()
 
         return redirect(url_for("admin"))
 
-    cursor.execute("SELECT * FROM products")
-    products = cursor.fetchall()
+    conn = get_db_connection()
+    products = []
+    if conn:
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM products")
+            product_rows = cursor.fetchall()
+            
+            # Convert to list of dictionaries
+            columns = [desc[0] for desc in cursor.description]
+            for row in product_rows:
+                products.append(dict(zip(columns, row)))
+        except Exception as e:
+            print(f"Database error: {e}")
+        finally:
+            conn.close()
+
     return render_template("admin.html", products=products)
 
 @app.route("/delete_product/<int:id>")
 def delete_product(id):
-    cursor.execute("DELETE FROM products WHERE id = %s", (id,))
-    db.commit()
+    conn = get_db_connection()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM products WHERE id = %s", (id,))
+            conn.commit()
+        except Exception as e:
+            print(f"Database error: {e}")
+        finally:
+            conn.close()
     return redirect(url_for("admin"))
 
 # ===== RUN APP =====
