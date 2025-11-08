@@ -4,6 +4,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from werkzeug.utils import secure_filename
 from flask_mail import Mail, Message
 from dotenv import load_dotenv
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # ===== LOAD ENV =====
 load_dotenv()
@@ -48,6 +49,30 @@ def init_db():
         )
     ''')
     
+    # Create users table for authentication
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            full_name TEXT,
+            is_admin BOOLEAN DEFAULT 0,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Create default admin user if doesn't exist
+    cursor.execute("SELECT COUNT(*) FROM users WHERE is_admin = 1")
+    admin_count = cursor.fetchone()[0]
+    
+    if admin_count == 0:
+        default_password = generate_password_hash("admin123")
+        cursor.execute('''
+            INSERT INTO users (email, password_hash, full_name, is_admin)
+            VALUES (?, ?, ?, ?)
+        ''', ("admin@niastore.com", default_password, "Store Admin", 1))
+        print("✅ Default admin user created: admin@niastore.com / admin123")
+    
     # Check if products table is empty and add sample data
     cursor.execute("SELECT COUNT(*) FROM products")
     count = cursor.fetchone()[0]
@@ -77,6 +102,32 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
+# ===== AUTHENTICATION HELPERS =====
+def login_required(f):
+    """Decorator to require login for routes"""
+    from functools import wraps
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Please log in to access this page.', 'error')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def admin_required(f):
+    """Decorator to require admin privileges"""
+    from functools import wraps
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Please log in to access this page.', 'error')
+            return redirect(url_for('login'))
+        if not session.get('is_admin'):
+            flash('Admin access required.', 'error')
+            return redirect(url_for('home'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 # ===== EMAIL CONFIG =====
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
@@ -95,6 +146,66 @@ def get_cart_total():
         for item in session['cart']:
             total += float(item['price']) * item['quantity']
     return round(total, 2)
+
+# ===== AUTH ROUTES =====
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        email = request.form["email"]
+        password = request.form["password"]
+        
+        db = get_db()
+        user = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+        db.close()
+        
+        if user and check_password_hash(user['password_hash'], password):
+            session['user_id'] = user['id']
+            session['user_email'] = user['email']
+            session['user_name'] = user['full_name']
+            session['is_admin'] = bool(user['is_admin'])
+            
+            flash(f"Welcome back, {user['full_name'] or user['email']}!", "success")
+            return redirect(url_for('home'))
+        else:
+            flash("Invalid email or password.", "error")
+    
+    return render_template("login.html")
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        email = request.form["email"]
+        password = request.form["password"]
+        full_name = request.form["full_name"]
+        
+        db = get_db()
+        
+        # Check if user already exists
+        existing_user = db.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
+        if existing_user:
+            flash("Email already registered. Please login.", "error")
+            db.close()
+            return redirect(url_for('login'))
+        
+        # Create new user
+        password_hash = generate_password_hash(password)
+        db.execute(
+            "INSERT INTO users (email, password_hash, full_name) VALUES (?, ?, ?)",
+            (email, password_hash, full_name)
+        )
+        db.commit()
+        db.close()
+        
+        flash("Registration successful! Please login.", "success")
+        return redirect(url_for('login'))
+    
+    return render_template("register.html")
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("You have been logged out.", "info")
+    return redirect(url_for('home'))
 
 # ===== ROUTES =====
 @app.route("/")
@@ -194,6 +305,7 @@ def contact():
 
 # ===== ADMIN DASHBOARD =====
 @app.route("/admin", methods=["GET", "POST"])
+@admin_required
 def admin():
     db = get_db()
     
@@ -225,6 +337,7 @@ def admin():
     return render_template("admin.html", products=products)
 
 @app.route("/delete_product/<int:id>")
+@admin_required
 def delete_product(id):
     db = get_db()
     db.execute("DELETE FROM products WHERE id = ?", (id,))
@@ -232,6 +345,12 @@ def delete_product(id):
     db.close()
     flash("Product deleted successfully!", "success")
     return redirect(url_for("admin"))
+
+# ===== USER PROFILE =====
+@app.route("/profile")
+@login_required
+def profile():
+    return render_template("profile.html")
 
 # ===== RUN APP =====
 if __name__ == "__main__":

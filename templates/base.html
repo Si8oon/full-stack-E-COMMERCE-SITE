@@ -26,12 +26,50 @@
           <li><a href="{{ url_for('show_products') }}">Products</a></li>
           <li><a href="{{ url_for('cart') }}">Cart</a></li>
           <li><a href="{{ url_for('contact') }}">Contact</a></li>
+          
+          <!-- Authentication Links -->
+          {% if session.user_id %}
+            <!-- Show when user is logged in -->
+            <li class="nav-auth">
+              <a href="{{ url_for('profile') }}" class="user-welcome">
+                👤 {{ session.user_name or session.user_email }}
+              </a>
+              <div class="auth-dropdown">
+                <a href="{{ url_for('profile') }}">Profile</a>
+                {% if session.is_admin %}
+                  <a href="{{ url_for('admin') }}">Admin Dashboard</a>
+                {% endif %}
+                <a href="{{ url_for('logout') }}">Logout</a>
+              </div>
+            </li>
+          {% else %}
+            <!-- Show when user is not logged in -->
+            <li class="nav-auth">
+              <a href="{{ url_for('login') }}">Login</a>
+              <span class="nav-divider">|</span>
+              <a href="{{ url_for('register') }}">Register</a>
+            </li>
+          {% endif %}
         </ul>
       </nav>
       <div class="menu-btn">
         <span></span><span></span><span></span>
       </div>
     </header>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="flash-message {{ category }}">
+              {{ message }}
+              <span class="flash-close" onclick="this.parentElement.style.display='none'">×</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
 
     <!-- Main Page Content -->
     {% block content %}{% endblock %}

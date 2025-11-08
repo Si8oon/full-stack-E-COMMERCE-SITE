@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Login - NiA Store{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+
+<div class="auth-container">
+  <div class="auth-card">
+    <h2>Welcome Back! 👋</h2>
+    <p class="auth-subtitle">Sign in to your account</p>
+
+    <form method="POST" class="auth-form">
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" required placeholder="Enter your email">
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required placeholder="Enter your password">
+      </div>
+
+      <button type="submit" class="auth-btn">Sign In</button>
+    </form>
+
+    <div class="auth-links">
+      <p>Don't have an account? <a href="{{ url_for('register') }}">Sign up here</a></p>
+      <p>Admin access? Use: <strong>admin@niastore.com</strong> / <strong>admin123</strong></p>
+    </div>
+  </div>
+</div>
+{% endblock %}

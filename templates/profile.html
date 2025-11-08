@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Profile - NiA Store{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+  <div class="profile-card">
+    <h2>Your Profile 👤</h2>
+    
+    <div class="profile-info">
+      <div class="info-item">
+        <label>Name:</label>
+        <span>{{ session.user_name or 'Not set' }}</span>
+      </div>
+      
+      <div class="info-item">
+        <label>Email:</label>
+        <span>{{ session.user_email }}</span>
+      </div>
+      
+      <div class="info-item">
+        <label>Account Type:</label>
+        <span class="badge {% if session.is_admin %}admin-badge{% else %}user-badge{% endif %}">
+          {{ 'Administrator' if session.is_admin else 'Customer' }}
+        </span>
+      </div>
+    </div>
+
+    <div class="profile-actions">
+      <a href="{{ url_for('logout') }}" class="logout-btn">Log Out</a>
+      {% if session.is_admin %}
+        <a href="{{ url_for('admin') }}" class="admin-btn">Admin Dashboard</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
