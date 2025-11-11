@@ -46,6 +46,23 @@ def setup_database():
         INSERT INTO products (name, price, image, category, description, stock_quantity)
         VALUES (?, ?, ?, ?, ?, ?)
     ''', sample_products)
+
+
+    # ===== Add to init_db() =====
+# Create orders table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS orders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_name TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        address TEXT NOT NULL,
+        momo_reference TEXT,
+        total REAL NOT NULL,
+        status TEXT DEFAULT 'Pending',
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+''')
+
     
     conn.commit()
     conn.close()

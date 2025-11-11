@@ -29,6 +29,8 @@
       <div class="cart-actions">
         <a href="{{ url_for('clear_cart') }}" class="btn clear-btn">Clear Cart</a>
         <a href="{{ url_for('show_products') }}" class="btn continue-btn">Continue Shopping</a>
+        <a href="{{ url_for('checkout') }}" class="btn btn-success" style="margin-top:1rem; display:inline-block; padding:0.5rem 1rem; border-radius:5px; background:green; color:#fff;">Proceed to Checkout</a>
+
       </div>
 
     {% else %}

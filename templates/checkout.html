@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout – NiA Store{% endblock %}
+
+{% block content %}
+<div class="checkout-container" style="max-width: 600px; margin: 2rem auto; padding: 1.5rem; background: #fff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+  <h2 style="margin-bottom: 1rem; text-align:center;">Checkout</h2>
+
+  <form method="POST" action="{{ url_for('checkout') }}">
+    <div class="form-group" style="margin-bottom:1rem;">
+      <label>Full Name</label>
+      <input type="text" name="user_name" class="form-control" required style="width:100%; padding:0.5rem; border-radius:5px; border:1px solid #ccc;">
+    </div>
+
+    <div class="form-group" style="margin-bottom:1rem;">
+      <label>Phone Number (MTN MoMo)</label>
+      <input type="text" name="phone" class="form-control" required style="width:100%; padding:0.5rem; border-radius:5px; border:1px solid #ccc;">
+    </div>
+
+    <div class="form-group" style="margin-bottom:1rem;">
+      <label>Delivery Address</label>
+      <textarea name="address" class="form-control" required style="width:100%; padding:0.5rem; border-radius:5px; border:1px solid #ccc;"></textarea>
+    </div>
+
+    <div class="form-group" style="margin-bottom:1rem;">
+      <label>MoMo Reference (optional)</label>
+      <input type="text" name="momo_reference" class="form-control" placeholder="e.g. MOMO12345" style="width:100%; padding:0.5rem; border-radius:5px; border:1px solid #ccc;">
+    </div>
+
+    <p><strong>Total:</strong> GHS {{ total }}</p>
+
+    <button type="submit" class="btn btn-primary" style="width:100%; padding:0.75rem; border:none; border-radius:5px; background:#d0d65a; color:#fff; cursor:pointer;">Place Order</button>
+  </form>
+</div>
+{% endblock %}

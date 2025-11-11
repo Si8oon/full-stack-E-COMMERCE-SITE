@@ -352,6 +352,42 @@ def delete_product(id):
 def profile():
     return render_template("profile.html")
 
+
+#checkooooooout hhahahahahh#
+# ===== CHECKOUT ROUTE =====
+@app.route("/checkout", methods=["GET", "POST"])
+def checkout():
+    cart = session.get('cart', [])
+    total = get_cart_total()
+
+    if not cart:
+        flash("Your cart is empty.", "error")
+        return redirect(url_for("cart"))
+
+    if request.method == "POST":
+        user_name = request.form["user_name"]
+        phone = request.form["phone"]
+        address = request.form["address"]
+        momo_reference = request.form.get("momo_reference", "")
+
+        db = get_db()
+        db.execute('''
+            INSERT INTO orders (user_name, phone, address, momo_reference, total)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (user_name, phone, address, momo_reference, total))
+        db.commit()
+        db.close()
+
+        session.pop('cart', None)
+        flash("Order placed successfully! Our team will confirm your MoMo payment soon.", "success")
+        return redirect(url_for("home"))
+
+    return render_template("checkout.html", cart=cart, total=total)
+
+
+
+
+
 # ===== RUN APP =====
 if __name__ == "__main__":
     # Initialize database when app starts
