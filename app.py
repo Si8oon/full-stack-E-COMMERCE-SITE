@@ -70,8 +70,8 @@ def init_db():
         cursor.execute('''
             INSERT INTO users (email, password_hash, full_name, is_admin)
             VALUES (?, ?, ?, ?)
-        ''', ("admin@niastore.com", default_password, "Store Admin", 1))
-        print("✅ Default admin user created: admin@niastore.com / admin123")
+        ''', ("simon@gmail.com", default_password, "Store Admin", 1))
+        print("✅ Default admin user created: admin123/ admin123")
     
     # Check if products table is empty and add sample data
     cursor.execute("SELECT COUNT(*) FROM products")
@@ -128,7 +128,7 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# ===== EMAIL CONFIG =====
+
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
@@ -388,10 +388,10 @@ def checkout():
 
 
 
-# ===== RUN APP =====
+
 if __name__ == "__main__":
-    # Initialize database when app starts
-    print("🔄 Initializing database...")
+  
+    
     init_db()
     
     port = int(os.environ.get("PORT", 8000))
